@@ -1,7 +1,7 @@
 import getopt, sys
 
-def eprint(*arg):
-	print >>sys.stderr, arg
+def eprint(arg):
+	print >> sys.stderr, arg
 
 def usage_config():
 	print "config usage"
@@ -38,8 +38,14 @@ def show_all():
 	show_flavors()
 
 def do_config(option,arg):
-	print option
-	print arg
+	try:
+		f = open(arg, 'r')
+	except:
+		eprint("No such file: "+arg)
+		exit(0)
+	#if option == "--hardware":
+	print f
+
 
 def main():
 	try:
