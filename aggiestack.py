@@ -66,7 +66,7 @@ def main():
 	elif cmd == "show":
 		try:
 			cmd = sys.argv[2]
-			if cmd == "haredware":
+			if cmd == "hardware":
 				show_hardware()
 			elif cmd == "images":
 				show_images()
