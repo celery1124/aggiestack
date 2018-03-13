@@ -43,8 +43,11 @@ def do_config(option,arg):
 	except:
 		eprint("No such file: "+arg)
 		exit(0)
-	#if option == "--hardware":
-	print f
+	if option == "--hardware":
+		num_of_line = f.readline()
+		for i in xrange(int(num_of_line)):
+			hw = f.readline()
+			print hw
 
 
 def main():
