@@ -1,5 +1,6 @@
 import getopt, sys
 from prettytable import PrettyTable
+from collections import OrderedDict
 
 def eprint(arg):
 	print >> sys.stderr, arg
@@ -28,10 +29,10 @@ def show_hardware():
 	HW.show()
 
 def show_images():
-	print "show images later"
+	IMG.show()
 
 def show_flavors():
-	print "show flavors later"
+	FLV.show()
 
 def show_all():
 	show_hardware()
@@ -42,8 +43,13 @@ class Hardware:
 	def __init__(self):
 		self.hw_list = []
 	def insert(self,hw_inst):
-		hw_dict = {"name":hw_inst[0],"ip":hw_inst[1],"mem":hw_inst[2],"num-disk":hw_inst[3],"num-vcpus":hw_inst[4]}
-		self.hw_list.insert(0,hw_dict)
+		hw_dict = OrderedDict();
+		hw_dict["name"] = hw_inst[0];
+		hw_dict["ip"] = hw_inst[1];
+		hw_dict["mem"] = hw_inst[2];
+		hw_dict["num-disk"] = hw_inst[3];
+		hw_dict["num-vcpus"] = hw_inst[4];
+		self.hw_list.append(hw_dict)
 	def show(self):
 		try:
 			t = PrettyTable(self.hw_list[0].keys())
@@ -53,6 +59,41 @@ class Hardware:
 			t.add_row(i.values())
 		print t
 
+class Images:
+	def __init__(self):
+		self.img_list = []
+	def insert(self,img_inst):
+		img_dict = OrderedDict() 
+		img_dict["image-name"] = img_inst[0]
+		img_dict["path"] = img_inst[1]
+		self.img_list.append(img_dict)
+	def show(self):
+		try:
+			t = PrettyTable(self.img_list[0].keys())
+		except:
+			print "No hardware information yet"
+		for i in self.img_list:
+			t.add_row(i.values())
+		print t
+
+class Flavors:
+	def __init__(self):
+		self.flv_list = []
+	def insert(self,flv_inst):
+		flv_dict = OrderedDict() 
+		flv_dict["type"] = flv_inst[0]
+		flv_dict["mem"] = flv_inst[1]
+		flv_dict["num-disk"] = flv_inst[2]
+		flv_dict["num-vcpus"] = flv_inst[3]
+		self.flv_list.append(flv_dict)
+	def show(self):
+		try:
+			t = PrettyTable(self.flv_list[0].keys())
+		except:
+			print "No hardware information yet"
+		for i in self.flv_list:
+			t.add_row(i.values())
+		print t
 
 def do_config(option,arg):
 	try:
@@ -67,10 +108,21 @@ def do_config(option,arg):
 			hw_inst = hw_inst.split()
 			HW.insert(hw_inst)
 	elif option == "--images":
-
+		num_of_line = f.readline()
+		for i in xrange(int(num_of_line)):
+			img_inst = f.readline()
+			img_inst = img_inst.split()
+			IMG.insert(img_inst)
 	elif option == "--flavors":
+		num_of_line = f.readline()
+		for i in xrange(int(num_of_line)):
+			flv_inst = f.readline()
+			flv_inst = flv_inst.split()
+			FLV.insert(flv_inst)
 
 HW=Hardware()
+IMG=Images()
+FLV=Flavors()
 
 def main():
 	while True:
@@ -97,7 +149,7 @@ def main():
 			if len(opts) == 0:
 				usage_config()
 			for o, a in opts:
-				if o == "--hardware" or o == "images" or o == "flavors":
+				if o == "--hardware" or o == "--images" or o == "--flavors":
 					do_config(o,a)
 				else:
 					usage_config()
@@ -117,7 +169,7 @@ def main():
 					usage_show()
 			except:
 				usage_show()
-			sys.exit()
+				sys.exit()
 
 	
 if __name__ == "__main__":
