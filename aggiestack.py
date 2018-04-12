@@ -138,11 +138,9 @@ def main():
 				cmd = argv[2]
 		except:
 			usage()
-			sys.exit()
 		# valid test
 		if program_name != "aggiestack":
 			usage()
-			sys.exit()
 		if issuer is None:
 			if cmd == "config":
 				try:
@@ -150,7 +148,6 @@ def main():
 				except getopt.GetoptError as err:
 					eprint(str(err))  # will print something like "option -a not recognized"
 					usage_config()
-					sys.exit()
 				if len(opts) == 0:
 					usage_config()
 				for o, a in opts:
@@ -174,7 +171,6 @@ def main():
 						usage_show()
 				except:
 					usage_show()
-					sys.exit()
 		elif issuer == "admin":
 			if cmd == "can_host":
 				try:
