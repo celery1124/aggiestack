@@ -41,22 +41,25 @@ def show_all():
 
 class Hardware:
 	def __init__(self):
-		self.hw_list = []
-	def insert(self,hw_inst):
+		self.hw_list = OrderedDict();
+		self.attr_list = ["name", "ip", "mem", "num-disk", "num-vcpus"]
+	def insert(self, hw_inst):
 		hw_dict = OrderedDict();
 		hw_dict["name"] = hw_inst[0];
 		hw_dict["ip"] = hw_inst[1];
 		hw_dict["mem"] = hw_inst[2];
 		hw_dict["num-disk"] = hw_inst[3];
 		hw_dict["num-vcpus"] = hw_inst[4];
-		self.hw_list.append(hw_dict)
+		self.hw_list[hw_dict["name"]] = hw_dict
+	def get_inst(self, machine_name):
+
 	def show(self):
 		try:
-			t = PrettyTable(self.hw_list[0].keys())
+			t = PrettyTable(self.attr_list)
 		except:
 			print "No hardware information yet"
-		for i in self.hw_list:
-			t.add_row(i.values())
+		for k, v in self.hw_list.items():
+			t.add_row(v.values())
 		print t
 
 class Images:
@@ -120,6 +123,10 @@ def do_config(option,arg):
 			flv_inst = flv_inst.split()
 			FLV.insert(flv_inst)
 
+def check_can_host(machine, flavor):
+	m_inst = HW.
+
+
 HW=Hardware()
 IMG=Images()
 FLV=Flavors()
@@ -174,10 +181,9 @@ def main():
 		elif issuer == "admin":
 			if cmd == "can_host":
 				try:
-					machine_name = argv[2]
-					flavor = argv[3]
-					print machine_name
-					print flavor
+					machine_name = argv[3]
+					flavor = argv[4]
+					check_can_host(machine, flavor)
 				except:
 					usage_show()
 
