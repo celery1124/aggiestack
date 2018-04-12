@@ -71,7 +71,7 @@ class Images:
 		try:
 			t = PrettyTable(self.img_list[0].keys())
 		except:
-			print "No hardware information yet"
+			print "No images information yet"
 		for i in self.img_list:
 			t.add_row(i.values())
 		print t
@@ -90,7 +90,7 @@ class Flavors:
 		try:
 			t = PrettyTable(self.flv_list[0].keys())
 		except:
-			print "No hardware information yet"
+			print "No flavors information yet"
 		for i in self.flv_list:
 			t.add_row(i.values())
 		print t
@@ -132,9 +132,9 @@ def main():
 			program_name = argv[0]
 			issuer = argv[1]
 			if issuer != "admin" and issuer != "server":
+				issuer = None
 				cmd = argv[1]
 			else:
-				issuer = None
 				cmd = argv[2]
 		except:
 			usage()
