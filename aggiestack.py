@@ -51,8 +51,8 @@ class Hardware:
 		hw_dict["num-disk"] = hw_inst[3];
 		hw_dict["num-vcpus"] = hw_inst[4];
 		self.hw_list[hw_dict["name"]] = hw_dict
-	def get_inst(self, machine_name):
-
+	def get_machine(self, machine_name):
+		return hw_list[machine_name]
 	def show(self):
 		try:
 			t = PrettyTable(self.attr_list)
@@ -124,7 +124,7 @@ def do_config(option,arg):
 			FLV.insert(flv_inst)
 
 def check_can_host(machine, flavor):
-	m_inst = HW.
+	m_inst = HW.get_machine(machine)
 
 
 HW=Hardware()
@@ -137,6 +137,16 @@ def main():
 		argv = argv.split();
 		try:
 			program_name = argv[0]
+		except:
+			usage()
+
+		# valid test
+		if program_name == "q" or program_name == "quit":
+			exit(0)
+		elif program_name != "aggiestack":
+			usage()
+			continue
+		try:
 			issuer = argv[1]
 			if issuer != "admin" and issuer != "server":
 				issuer = None
@@ -145,9 +155,8 @@ def main():
 				cmd = argv[2]
 		except:
 			usage()
-		# valid test
-		if program_name != "aggiestack":
-			usage()
+			continue
+			
 		if issuer is None:
 			if cmd == "config":
 				try:
