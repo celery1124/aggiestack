@@ -130,7 +130,12 @@ def main():
 		argv = argv.split();
 		try:
 			program_name = argv[0]
-			cmd = argv[1]
+			issuer = argv[1]
+			if issuer != "admin" and issuer != "server":
+				cmd = argv[1]
+			else:
+				issuer = None
+				cmd = argv[2]
 		except:
 			usage()
 			sys.exit()
@@ -138,39 +143,51 @@ def main():
 		if program_name != "aggiestack":
 			usage()
 			sys.exit()
-
-		if(cmd == "config"):
-			try:
-				opts, args = getopt.getopt(argv[2:], "h", ["hardware=", "images=", "flavors="])
-			except getopt.GetoptError as err:
-				eprint(str(err))  # will print something like "option -a not recognized"
-				usage_config()
-				sys.exit()
-			if len(opts) == 0:
-				usage_config()
-			for o, a in opts:
-				if o == "--hardware" or o == "--images" or o == "--flavors":
-					do_config(o,a)
-				else:
+		if issuer is None:
+			if cmd == "config":
+				try:
+					opts, args = getopt.getopt(argv[2:], "h", ["hardware=", "images=", "flavors="])
+				except getopt.GetoptError as err:
+					eprint(str(err))  # will print something like "option -a not recognized"
 					usage_config()
+					sys.exit()
+				if len(opts) == 0:
+					usage_config()
+				for o, a in opts:
+					if o == "--hardware" or o == "--images" or o == "--flavors":
+						do_config(o,a)
+					else:
+						usage_config()
 
-		elif cmd == "show":
-			try:
-				cmd = argv[2]
-				if cmd == "hardware":
-					show_hardware()
-				elif cmd == "images":
-					show_images()
-				elif cmd == "flavors":
-					show_flavors()
-				elif cmd == "all":
-					show_all()
-				else:
+			elif cmd == "show":
+				try:
+					cmd = argv[2]
+					if cmd == "hardware":
+						show_hardware()
+					elif cmd == "images":
+						show_images()
+					elif cmd == "flavors":
+						show_flavors()
+					elif cmd == "all":
+						show_all()
+					else:
+						usage_show()
+				except:
 					usage_show()
-			except:
-				usage_show()
-				sys.exit()
+					sys.exit()
+		elif issuer == "admin":
+			if cmd == "can_host":
+				try:
+					machine_name = argv[2]
+					flavor = argv[3]
+					print machine_name
+					print flavor
+				except:
+					usage_show()
 
-	
+		elif issuer == "server":
+			usage_show()
+
+
 if __name__ == "__main__":
     main()
