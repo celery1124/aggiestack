@@ -71,6 +71,8 @@ class Images:
 		img_dict["image-name"] = img_inst[0]
 		img_dict["path"] = img_inst[1]
 		self.img_list[img_dict["image-name"]] = img_dict
+	def get_image(self, image_name):
+		return img_list[image_name]
 	def show(self):
 		try:
 			t = PrettyTable(self.img_attr_list)
@@ -91,6 +93,8 @@ class Flavors:
 		flv_dict["num-disk"] = flv_inst[2]
 		flv_dict["num-vcpus"] = flv_inst[3]
 		self.flv_list[flv_dict["type"]] = flv_dict
+	def get_flavor(self, flavor_name):
+		return flv_list[flavor_name]
 	def show(self):
 		try:
 			t = PrettyTable(self.flv_attr_list)
