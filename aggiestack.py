@@ -42,7 +42,7 @@ def show_all():
 class Hardware:
 	def __init__(self):
 		self.hw_list = OrderedDict();
-		self.attr_list = ["name", "ip", "mem", "num-disk", "num-vcpus"]
+		self.hw_attr_list = ["name", "ip", "mem", "num-disk", "num-vcpus"]
 	def insert(self, hw_inst):
 		hw_dict = OrderedDict();
 		hw_dict["name"] = hw_inst[0];
@@ -55,7 +55,7 @@ class Hardware:
 		return hw_list[machine_name]
 	def show(self):
 		try:
-			t = PrettyTable(self.attr_list)
+			t = PrettyTable(self.hw_attr_list)
 		except:
 			print "No hardware information yet"
 		for k, v in self.hw_list.items():
@@ -64,38 +64,40 @@ class Hardware:
 
 class Images:
 	def __init__(self):
-		self.img_list = []
+		self.img_list = OrderedDict()
+		self.img_attr_list = ["image-name", "path"]
 	def insert(self,img_inst):
-		img_dict = OrderedDict() 
+		img_dict = OrderedDict()
 		img_dict["image-name"] = img_inst[0]
 		img_dict["path"] = img_inst[1]
-		self.img_list.append(img_dict)
+		self.img_list[img_dict["image-name"]] = img_dict
 	def show(self):
 		try:
-			t = PrettyTable(self.img_list[0].keys())
+			t = PrettyTable(self.img_attr_list)
 		except:
 			print "No images information yet"
-		for i in self.img_list:
-			t.add_row(i.values())
+		for k, v in self.img_list.items():
+			t.add_row(v.values())
 		print t
 
 class Flavors:
 	def __init__(self):
-		self.flv_list = []
+		self.flv_list = OrderedDict()
+		self.flv_attr_list = ["type", "mem", "num-disk", "num-vcpus"]
 	def insert(self,flv_inst):
 		flv_dict = OrderedDict() 
 		flv_dict["type"] = flv_inst[0]
 		flv_dict["mem"] = flv_inst[1]
 		flv_dict["num-disk"] = flv_inst[2]
 		flv_dict["num-vcpus"] = flv_inst[3]
-		self.flv_list.append(flv_dict)
+		self.flv_list[flv_dict["type"]] = flv_dict
 	def show(self):
 		try:
-			t = PrettyTable(self.flv_list[0].keys())
+			t = PrettyTable(self.flv_attr_list)
 		except:
 			print "No flavors information yet"
-		for i in self.flv_list:
-			t.add_row(i.values())
+		for k, v in self.flv_list.items():
+			t.add_row(v.values())
 		print t
 
 def do_config(option,arg):
@@ -156,7 +158,7 @@ def main():
 		except:
 			usage()
 			continue
-			
+
 		if issuer is None:
 			if cmd == "config":
 				try:
