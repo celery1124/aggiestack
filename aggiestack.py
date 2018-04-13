@@ -44,6 +44,8 @@ class Hardware:
 		self.hw_list[hw_dict["name"]] = hw_dict
 	def get_machine(self, machine_name):
 		return self.hw_list[machine_name]
+	def get_machine_list(self):
+		return self.hw_list.keys()
 	def show(self):
 		try:
 			t = PrettyTable(self.hw_attr_list)
@@ -122,15 +124,18 @@ def do_config(option,arg):
 			FLV.insert(flv_inst)
 
 def check_can_host(machine, flavor):
-	m_inst = HW.get_machine(machine)
+	m_inst = HW_free.get_machine(machine)
 	f_inst = FLV.get_flavor(flavor)
 	check_list = ["mem", "num-disk", "num-vcpus"]
 	can_host = True
 	for i in check_list:
-		if f_inst[i] > m_inst[i]:
+		if int(f_inst[i]) > int(m_inst[i]):
 			can_host = False
 			break;
 	return can_host
+
+def server_create(machine, flavor_type):
+
 
 
 HW=Hardware()
@@ -206,7 +211,24 @@ def main():
 					usage_show()
 
 		elif issuer == "server":
-			usage_show()
+			if cmd == "create":
+				try:
+					opts, args = getopt.getopt(argv[3:], "h", ["image=", "flavor=", "instance_name"])
+				except getopt.GetoptError as err:
+					eprint(str(err))  # will print something like "option -a not recognized
+				if len(opts) != 2 or args is None:
+					usage_show()
+				for o, a in opts:
+					if o == "--image":
+						machine_name = a
+					if o == "--flavor":
+						flavor_type = a
+				machine_list = HW_free.get_machine_list()
+				for i in machine_list:
+					# simple first fit algorithm, can be further improved
+					if check_can_host(i, flavor_type) == True:
+						server_create(i, flavor_type)
+
 
 
 if __name__ == "__main__":
