@@ -25,19 +25,10 @@ def usage():
 	usage_config()
 	usage_show()
 
-def show_hardware():
-	HW.show()
-
-def show_images():
-	IMG.show()
-
-def show_flavors():
-	FLV.show()
-
 def show_all():
-	show_hardware()
-	show_images()
-	show_flavors()
+	HW.show()
+	IMG.show()
+	FLV.show()
 
 class Hardware:
 	def __init__(self):
@@ -116,6 +107,7 @@ def do_config(option,arg):
 			hw_inst = f.readline()
 			hw_inst = hw_inst.split()
 			HW.insert(hw_inst)
+			HW_free.insert(hw_inst)
 	elif option == "--images":
 		num_of_line = f.readline()
 		for i in xrange(int(num_of_line)):
@@ -142,6 +134,7 @@ def check_can_host(machine, flavor):
 
 
 HW=Hardware()
+HW_free=Hardware()
 IMG=Images()
 FLV=Flavors()
 
@@ -190,11 +183,11 @@ def main():
 				try:
 					cmd = argv[2]
 					if cmd == "hardware":
-						show_hardware()
+						HW.show()
 					elif cmd == "images":
-						show_images()
+						IMG.show()
 					elif cmd == "flavors":
-						show_flavors()
+						FLV.show()
 					elif cmd == "all":
 						show_all()
 					else:
@@ -202,7 +195,9 @@ def main():
 				except:
 					usage_show()
 		elif issuer == "admin":
-			if cmd == "can_host":
+			if cmd == "show":
+				HW_free.show()
+			elif cmd == "can_host":
 				try:
 					machine_name = argv[3]
 					flavor_type = argv[4]
