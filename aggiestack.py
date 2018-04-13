@@ -52,7 +52,7 @@ class Hardware:
 		hw_dict["num-vcpus"] = hw_inst[4];
 		self.hw_list[hw_dict["name"]] = hw_dict
 	def get_machine(self, machine_name):
-		return hw_list[machine_name]
+		return self.hw_list[machine_name]
 	def show(self):
 		try:
 			t = PrettyTable(self.hw_attr_list)
@@ -72,7 +72,7 @@ class Images:
 		img_dict["path"] = img_inst[1]
 		self.img_list[img_dict["image-name"]] = img_dict
 	def get_image(self, image_name):
-		return img_list[image_name]
+		return self.img_list[image_name]
 	def show(self):
 		try:
 			t = PrettyTable(self.img_attr_list)
@@ -94,7 +94,7 @@ class Flavors:
 		flv_dict["num-vcpus"] = flv_inst[3]
 		self.flv_list[flv_dict["type"]] = flv_dict
 	def get_flavor(self, flavor_name):
-		return flv_list[flavor_name]
+		return self.flv_list[flavor_name]
 	def show(self):
 		try:
 			t = PrettyTable(self.flv_attr_list)
@@ -131,6 +131,14 @@ def do_config(option,arg):
 
 def check_can_host(machine, flavor):
 	m_inst = HW.get_machine(machine)
+	f_inst = FLV.get_flavor(flavor)
+	check_list = ["mem", "num-disk", "num-vcpus"]
+	can_host = True
+	for i in check_list:
+		if f_inst[i] > m_inst[i]:
+			can_host = False
+			break;
+	return can_host
 
 
 HW=Hardware()
@@ -197,8 +205,8 @@ def main():
 			if cmd == "can_host":
 				try:
 					machine_name = argv[3]
-					flavor = argv[4]
-					check_can_host(machine, flavor)
+					flavor_type = argv[4]
+					print check_can_host(machine_name, flavor_type)
 				except:
 					usage_show()
 
