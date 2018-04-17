@@ -124,7 +124,7 @@ class Instance:
 			list_attr.remove("machine")
 			t = PrettyTable(list_attr)
 		except:
-			print "No flavors information yet"
+			print "No Instance information yet"
 		for k, v in self.inst_list.items():
 			row = [v[x] for x in list_attr]
 			t.add_row(row)
@@ -167,13 +167,17 @@ def check_can_host(machine, flavor):
 			break;
 	return can_host
 
-def server_create(machine, flavor_type):
-	HW_free
+def server_create(name, image, machine, flavor_type):
+	flavor = FLV.get_flavor(flavor_type)
+	HW_free.alloc(machine, flavor)
+	inst = [name, machine, image, flavor_type]
+	INST.add(inst)
 
 HW=Hardware()
 HW_free=Hardware()
 IMG=Images()
 FLV=Flavors()
+INST=Instance()
 
 def main():
 	while True:
@@ -252,14 +256,16 @@ def main():
 					usage_show()
 				for o, a in opts:
 					if o == "--image":
-						machine_name = a
+						image = a
 					if o == "--flavor":
 						flavor_type = a
+				inst_name = args
 				machine_list = HW_free.get_machine_list()
 				for i in machine_list:
 					# simple first fit algorithm, can be further improved
 					if check_can_host(i, flavor_type) == True:
-						server_create(i, flavor_type)
+						server_create(inst_name, image, i, flavor_type)
+						break
 
 
 
