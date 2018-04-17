@@ -118,6 +118,10 @@ class Instance:
 		inst_dict["image"] = inst[2]
 		inst_dict["flavor"] = inst[3]
 		self.inst_list[inst_dict["name"]] = inst_dict
+	def get_instance(self, inst_name):
+		return self.inst_list.get(inst_name)
+	def remove(self, inst_name):
+		self.inst_list.pop(inst_name, None)
 	def list(self):
 		try:
 			list_attr = self.inst_attr_list
@@ -172,6 +176,16 @@ def server_create(name, image, machine, flavor_type):
 	HW_free.alloc(machine, flavor)
 	inst = [name, machine, image, flavor_type]
 	INST.add(inst)
+
+def server_delete(name):
+	inst = INST.get_instance(name)
+	if inst is None:
+		return False
+	machine = inst["machine"];
+	flavor = FLV.get_flavor(inst["flavor"])
+	HW_free.release(machine, flavor)
+	INST.remove(name)
+	return True
 
 HW=Hardware()
 HW_free=Hardware()
@@ -266,7 +280,13 @@ def main():
 					if check_can_host(i, flavor_type) == True:
 						server_create(inst_name, image, i, flavor_type)
 						break
-
+			elif cmd == "delete":
+				inst_name = argv[3]
+				if server_delete(inst_name) == False:
+					err = inst_name + " instance not exist!"
+					eprint(err)
+			elif cmd == "list":
+				INST.list()
 
 
 if __name__ == "__main__":
