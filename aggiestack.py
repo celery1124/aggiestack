@@ -35,12 +35,12 @@ class Hardware:
 		self.hw_list = OrderedDict();
 		self.hw_attr_list = ["name", "ip", "mem", "num-disk", "num-vcpus"]
 	def insert(self, hw_inst):
-		hw_dict = OrderedDict();
-		hw_dict["name"] = hw_inst[0];
-		hw_dict["ip"] = hw_inst[1];
-		hw_dict["mem"] = hw_inst[2];
-		hw_dict["num-disk"] = hw_inst[3];
-		hw_dict["num-vcpus"] = hw_inst[4];
+		hw_dict = OrderedDict()
+		hw_dict["name"] = hw_inst[0]
+		hw_dict["ip"] = hw_inst[1]
+		hw_dict["mem"] = int(hw_inst[2])
+		hw_dict["num-disk"] = int(hw_inst[3])
+		hw_dict["num-vcpus"] = int(hw_inst[4])
 		self.hw_list[hw_dict["name"]] = hw_dict
 	def get_machine(self, machine_name):
 		return self.hw_list[machine_name]
@@ -92,9 +92,9 @@ class Flavors:
 	def insert(self,flv_inst):
 		flv_dict = OrderedDict() 
 		flv_dict["type"] = flv_inst[0]
-		flv_dict["mem"] = flv_inst[1]
-		flv_dict["num-disk"] = flv_inst[2]
-		flv_dict["num-vcpus"] = flv_inst[3]
+		flv_dict["mem"] = int(flv_inst[1])
+		flv_dict["num-disk"] = int(flv_inst[2])
+		flv_dict["num-vcpus"] = int(flv_inst[3])
 		self.flv_list[flv_dict["type"]] = flv_dict
 	def get_flavor(self, flavor_name):
 		return self.flv_list[flavor_name]
@@ -259,7 +259,7 @@ def main():
 						image = a
 					if o == "--flavor":
 						flavor_type = a
-				inst_name = args
+				inst_name = args[0]
 				machine_list = HW_free.get_machine_list()
 				for i in machine_list:
 					# simple first fit algorithm, can be further improved
