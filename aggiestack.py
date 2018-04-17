@@ -46,6 +46,16 @@ class Hardware:
 		return self.hw_list[machine_name]
 	def get_machine_list(self):
 		return self.hw_list.keys()
+	# alloc resources flavor requires from a machine
+	def alloc(self, machine, flavor):
+		alloc_list = ["mem", "num-disk", "num-vcpus"]
+		for i in alloc_list:
+			self.hw_list[machine][i] -= flavor[i]
+	# release resources flavor requires from a machine
+	def release(self, machine, flavor):
+		release_list = ["mem", "num-disk", "num-vcpus"]
+		for i in release_list:
+			self.hw_list[machine][i] += flavor[i]
 	def show(self):
 		try:
 			t = PrettyTable(self.hw_attr_list)
@@ -135,8 +145,7 @@ def check_can_host(machine, flavor):
 	return can_host
 
 def server_create(machine, flavor_type):
-
-
+	HW_free
 
 HW=Hardware()
 HW_free=Hardware()
