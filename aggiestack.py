@@ -121,6 +121,14 @@ class Instance:
 			row = [v[x] for x in list_attr]
 			t.add_row(row)
 		print t
+	def show_instance(self):
+		list_attr = ["name", "machine"]
+		print_list_attr = ["instance name", "physical server"]
+		t = PrettyTable(print_list_attr)
+		for k, v in self.inst_list/items():
+			row = [v[x] for x in list_attr]
+			t.add_row(row)
+		print t
 
 def do_config(option,arg):
 	try:
@@ -239,7 +247,16 @@ def main():
 					usage_show()
 		elif issuer == "admin":
 			if cmd == "show":
-				HW_free.show()
+				try:
+					suffix = argv[3]
+					if suffix == "hardware":
+						HW_free.show()
+					elif suffix == "instance":
+						INST.show_instance()
+					else:
+						usage_show()
+				except:
+					usage_show()	
 			elif cmd == "can_host":
 				try:
 					machine_name = argv[3]
