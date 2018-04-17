@@ -125,7 +125,7 @@ class Instance:
 		list_attr = ["name", "machine"]
 		print_list_attr = ["instance name", "physical server"]
 		t = PrettyTable(print_list_attr)
-		for k, v in self.inst_list/items():
+		for k, v in self.inst_list.items():
 			row = [v[x] for x in list_attr]
 			t.add_row(row)
 		print t
@@ -280,11 +280,15 @@ def main():
 						flavor_type = a
 				inst_name = args[0]
 				machine_list = HW_free.get_machine_list()
+				create_success = False
 				for i in machine_list:
 					# simple first fit algorithm, can be further improved
 					if check_can_host(i, flavor_type) == True:
 						server_create(inst_name, image, i, flavor_type)
+						create_success = True
 						break
+				if create_success == False:
+					eprint("No more available resources")
 			elif cmd == "delete":
 				inst_name = argv[3]
 				if server_delete(inst_name) == False:
