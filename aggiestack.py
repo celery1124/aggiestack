@@ -107,6 +107,29 @@ class Flavors:
 			t.add_row(v.values())
 		print t
 
+class Instance:
+	def __init__(self):
+		self.inst_list = OrderedDict()
+		self.inst_attr_list = ["name", "machine", "image", "flavor"]
+	def add(self, inst):
+		inst_dict = OrderedDict() 
+		inst_dict["name"] = inst[0]
+		inst_dict["machine"] = inst[1]
+		inst_dict["image"] = inst[2]
+		inst_dict["flavor"] = inst[3]
+		self.inst_list[inst_dict["name"]] = inst_dict
+	def list(self):
+		try:
+			list_attr = self.inst_attr_list
+			list_attr.remove("machine")
+			t = PrettyTable(list_attr)
+		except:
+			print "No flavors information yet"
+		for k, v in self.inst_list.items():
+			row = [v[x] for x in list_attr]
+			t.add_row(row)
+		print t
+
 def do_config(option,arg):
 	try:
 		f = open(arg, 'r')
