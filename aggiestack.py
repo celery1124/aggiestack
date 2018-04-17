@@ -114,7 +114,7 @@ class Instance:
 	def remove(self, inst_name):
 		self.inst_list.pop(inst_name, None)
 	def list(self):
-		list_attr = self.inst_attr_list
+		list_attr = list(self.inst_attr_list)
 		list_attr.remove("machine")
 		t = PrettyTable(list_attr)
 		for k, v in self.inst_list.items():
