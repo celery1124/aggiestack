@@ -57,10 +57,7 @@ class Hardware:
 		for i in release_list:
 			self.hw_list[machine][i] += flavor[i]
 	def show(self):
-		try:
-			t = PrettyTable(self.hw_attr_list)
-		except:
-			print "No hardware information yet"
+		t = PrettyTable(self.hw_attr_list)
 		for k, v in self.hw_list.items():
 			t.add_row(v.values())
 		print t
@@ -77,10 +74,7 @@ class Images:
 	def get_image(self, image_name):
 		return self.img_list[image_name]
 	def show(self):
-		try:
-			t = PrettyTable(self.img_attr_list)
-		except:
-			print "No images information yet"
+		t = PrettyTable(self.img_attr_list)
 		for k, v in self.img_list.items():
 			t.add_row(v.values())
 		print t
@@ -99,10 +93,7 @@ class Flavors:
 	def get_flavor(self, flavor_name):
 		return self.flv_list[flavor_name]
 	def show(self):
-		try:
-			t = PrettyTable(self.flv_attr_list)
-		except:
-			print "No flavors information yet"
+		t = PrettyTable(self.flv_attr_list)
 		for k, v in self.flv_list.items():
 			t.add_row(v.values())
 		print t
@@ -123,12 +114,9 @@ class Instance:
 	def remove(self, inst_name):
 		self.inst_list.pop(inst_name, None)
 	def list(self):
-		try:
-			list_attr = self.inst_attr_list
-			list_attr.remove("machine")
-			t = PrettyTable(list_attr)
-		except:
-			print "No Instance information yet"
+		list_attr = self.inst_attr_list
+		list_attr.remove("machine")
+		t = PrettyTable(list_attr)
 		for k, v in self.inst_list.items():
 			row = [v[x] for x in list_attr]
 			t.add_row(row)
