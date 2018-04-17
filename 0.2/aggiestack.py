@@ -32,15 +32,23 @@ def show_all():
 
 class Hardware:
 	def __init__(self):
-		self.hw_list = OrderedDict();
-		self.hw_attr_list = ["name", "ip", "mem", "num-disk", "num-vcpus"]
-	def insert(self, hw_inst):
+		self.hw_list = OrderedDict()
+		self.rk_list = OrderedDict()
+		self.rk_attr_list = ["name", "capacity"]
+		self.hw_attr_list = ["name", "rack", "ip", "mem", "num-disk", "num-vcpus"]
+	def insert_rack(self, rk_inst):
+		rk_dict = OrderedDict()
+		rk_dict["name"] = rk_inst[0]
+		rk_dict["capacity"] = rk_inst[1]
+		self.rk_list[rk_dict["name"]] = rk_dict
+	def insert_machine(self, hw_inst):
 		hw_dict = OrderedDict()
 		hw_dict["name"] = hw_inst[0]
-		hw_dict["ip"] = hw_inst[1]
-		hw_dict["mem"] = int(hw_inst[2])
-		hw_dict["num-disk"] = int(hw_inst[3])
-		hw_dict["num-vcpus"] = int(hw_inst[4])
+		hw_dict["rack"] = hw_inst[1]
+		hw_dict["ip"] = hw_inst[2]
+		hw_dict["mem"] = int(hw_inst[3])
+		hw_dict["num-disk"] = int(hw_inst[4])
+		hw_dict["num-vcpus"] = int(hw_inst[5])
 		self.hw_list[hw_dict["name"]] = hw_dict
 	def get_machine(self, machine_name):
 		return self.hw_list[machine_name]
@@ -57,24 +65,31 @@ class Hardware:
 		for i in release_list:
 			self.hw_list[machine][i] += flavor[i]
 	def show(self):
-		t = PrettyTable(self.hw_attr_list)
+		rk_attr_list = ["rack-name", "storage-capacity(MB)"]
+		t_rk = PrettyTable(rk_attr_list)
+		for k, v in self.rk_list.items():
+			t_rk.add_row(v.values())
+		print t_rk
+		t_hw = PrettyTable(self.hw_attr_list)
 		for k, v in self.hw_list.items():
-			t.add_row(v.values())
-		print t
+			t_hw.add_row(v.values())
+		print t_hw
 
 class Images:
 	def __init__(self):
 		self.img_list = OrderedDict()
-		self.img_attr_list = ["image-name", "path"]
+		self.img_attr_list = ["image-name", "size", "path"]
 	def insert(self,img_inst):
 		img_dict = OrderedDict()
 		img_dict["image-name"] = img_inst[0]
-		img_dict["path"] = img_inst[1]
+		img_dict["size"] = img_inst[1]
+		img_dict["path"] = img_inst[2]
 		self.img_list[img_dict["image-name"]] = img_dict
 	def get_image(self, image_name):
 		return self.img_list[image_name]
 	def show(self):
-		t = PrettyTable(self.img_attr_list)
+		show_attr_list = ["image-name", "size(MB)", "path"]
+		t = PrettyTable(show_attr_list)
 		for k, v in self.img_list.items():
 			t.add_row(v.values())
 		print t
@@ -137,12 +152,20 @@ def do_config(option,arg):
 		eprint("No such file: "+arg)
 		exit(0)
 	if option == "--hardware":
+		# read the rack information
+		num_of_line = f.readline()
+		for i in xrange(int(num_of_line)):
+			rk_inst = f.readline()
+			rk_inst = rk_inst.split()
+			HW.insert_rack(rk_inst)
+			HW_free.insert_rack(rk_inst)
+		# read the machine information
 		num_of_line = f.readline()
 		for i in xrange(int(num_of_line)):
 			hw_inst = f.readline()
 			hw_inst = hw_inst.split()
-			HW.insert(hw_inst)
-			HW_free.insert(hw_inst)
+			HW.insert_machine(hw_inst)
+			HW_free.insert_machine(hw_inst)
 	elif option == "--images":
 		num_of_line = f.readline()
 		for i in xrange(int(num_of_line)):
