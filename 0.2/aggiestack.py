@@ -31,7 +31,8 @@ def show_all():
 	FLV.show()
 
 class Rack:
-	def __init__(self, size):
+	def __init__(self, name, size):
+		self.name = name
 		self.capacity = size
 		self.image_list = []
 	def find_image(self, image):
@@ -48,6 +49,13 @@ class Rack:
 		return pop_img["size"]
 	def capacity(self):
 		return self.capacity
+	def list(self):
+		str = "Rack Name: "+self.name+", Availale space: "+str(self.capacity)
+		attr = [str]
+		t = PrettyTable(attr)
+		for i in self.image_list:
+			t.add_row(i)
+		print t
 
 class Hardware:
 	def __init__(self):
@@ -59,7 +67,7 @@ class Hardware:
 		rk_dict = OrderedDict()
 		rk_dict["name"] = rk_inst[0]
 		rk_dict["capacity"] = int(rk_inst[1])
-		rk_dict["image-cache"] = Rack(rk_dict["capacity"])
+		rk_dict["image-cache"] = Rack(rk_dict["name"]rk_dict["capacity"])
 		self.rk_list[rk_dict["name"]] = rk_dict
 	def insert_machine(self, hw_inst):
 		hw_dict = OrderedDict()
@@ -113,6 +121,8 @@ class Hardware:
 		for k, v in self.hw_list.items():
 			t_hw.add_row(v.values())
 		print t_hw
+	def show_imagecaches(self, rack_name):
+		self.rk_list[rack_name]["image-cache"].list()
 
 class Images:
 	def __init__(self):
@@ -251,7 +261,7 @@ def server_create(name, image_name, flavor_type):
 		rack = HW_free.find_rack_with_image(image_name)
 		# if found rack contain image allocate on that rack
 		if rack is not None and rack not in unavail_rack_list:
-			HW_free.rk_list[rack].update_image(image)
+			HW_free.rk_list[rack]["image-cache"].update_image(image)
 			create_success = server_create_in_rack(name, rack, image_name, flavor_type)
 			# add to unavail_rack_list if no resources
 			if create_success == False:
@@ -264,8 +274,8 @@ def server_create(name, image_name, flavor_type):
 			rack, avail_space = HW_free.find_rack_with_maxspace(unavail_rack_list)
 			# evict image until there is enough space for the image
 			while avail_space < image["size"]:
-				avail_space += HW_free.rk_list[rack].remove_image()
-			HW_free.rk_list[rack].insert_image(image)
+				avail_space += HW_free.rk_list[rack]["image-cache"].remove_image()
+			HW_free.rk_list[rack]["image-cache"].insert_image(image)
 			create_success = server_create_in_rack(name, rack, image_name, flavor_type)
 			# add to unavail_rack_list if no resources
 			if create_success == False:
@@ -274,10 +284,6 @@ def server_create(name, image_name, flavor_type):
 				break
 	return create_success
 
-
-	
-	
-	
 
 def server_delete(name):
 	inst = INST.get_instance(name)
@@ -298,7 +304,7 @@ INST=Instance()
 def main():
 	while True:
 		argv = raw_input('> ')
-		argv = argv.split();
+		argv = argv.split()
 		try:
 			program_name = argv[0]
 		except:
@@ -357,8 +363,14 @@ def main():
 					suffix = argv[3]
 					if suffix == "hardware":
 						HW_free.show()
-					elif suffix == "instance":
+					elif suffix == "instances":
 						INST.show_instance()
+					elif suffix == "imagecaches"
+						try:
+							rack = argv[4]
+							HW_free.show_imagecaches(rack)
+						except:
+							usage_show()
 					else:
 						usage_show()
 				except:
