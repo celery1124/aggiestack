@@ -41,10 +41,11 @@ class Rack:
 		self.image_list.append(image)
 	def insert_image(self, image):
 		self.image_list.append(image)
-		self.capacity -= image.size;
+		self.capacity -= image["size"];
 	def remove_image(self):
 		pop_img = self.image_list.pop(0)
-		self.capacity += pop_img.size
+		self.capacity += pop_img["size"]
+		return pop_img["size"]
 	def capacity(self):
 		return self.capacity
 
@@ -57,8 +58,8 @@ class Hardware:
 	def insert_rack(self, rk_inst):
 		rk_dict = OrderedDict()
 		rk_dict["name"] = rk_inst[0]
-		rk_dict["capacity"] = rk_inst[1]
-		rk_dict["image-cache"] = Rack(rk_inst[1])
+		rk_dict["capacity"] = int(rk_inst[1])
+		rk_dict["image-cache"] = Rack(rk_dict["capacity"])
 		self.rk_list[rk_dict["name"]] = rk_dict
 	def insert_machine(self, hw_inst):
 		hw_dict = OrderedDict()
@@ -71,8 +72,25 @@ class Hardware:
 		self.hw_list[hw_dict["name"]] = hw_dict
 	def get_machine(self, machine_name):
 		return self.hw_list[machine_name]
-	def get_machine_list(self):
-		return self.hw_list.keys()
+	def get_machine_list(self, rack_name):
+		machine_list = []
+		for k, v in self.hw_list:
+			if v["rack"] == rack_name:
+				machine_list.append(k)
+	def find_rack_with_image(self, image_name):
+		# simple first fit algorithm for finding image in image cache
+		for k, v in self.rk_list:
+			if v["image-cache"].find_image(image_name) == True:
+				return k
+		return None
+	def find_rack_with_maxspace(self, exclude_list):
+		max_space = -1
+		rack = None
+		for k, v in self.rk_list:
+			if v["image-cache"].capacity > max_space and k not in exclude_list:
+				max_space = v["image-cache"].capacity
+				rack = k
+		return rack, max_space
 	# alloc resources flavor requires from a machine
 	def alloc(self, machine, flavor):
 		alloc_list = ["mem", "num-disk", "num-vcpus"]
@@ -211,11 +229,55 @@ def check_can_host(machine, flavor):
 			break;
 	return can_host
 
-def server_create(name, image, machine, flavor_type):
+def server_create_in_rack(name, rack, image_name, flavor_type):
 	flavor = FLV.get_flavor(flavor_type)
-	HW_free.alloc(machine, flavor)
-	inst = [name, machine, image, flavor_type]
-	INST.add(inst)
+	image = IMG.get_image(image_name)
+	machine_list = HW_free.get_machine_list(rack)
+	# simple first fit algorithm for allocation
+	for i in machine_list:
+		if check_can_host(i, flavor_type) == True:
+			HW_free.alloc(i, flavor)
+			inst = [name, i, image_name, flavor_type]
+			INST.add(inst)
+			return True
+	return False
+
+def server_create(name, image_name, flavor_type):
+	unavail_rack_list = []
+	image = IMG.get_image(image_name)
+	create_success = False
+	while len(unavail_rack_list) != len(HW_free.rk_list.keys()):
+		# first check rack server cache, see if contains image
+		rack = HW_free.find_rack_with_image(image_name)
+		# if found rack contain image allocate on that rack
+		if rack is not None and rack not in unavail_rack_list:
+			HW_free.rk_list[rack].update_image(image)
+			create_success = server_create_in_rack(name, rack, image_name, flavor_type)
+			# add to unavail_rack_list if no resources
+			if create_success == False:
+				unavail_rack_list.append(rack)
+			else:
+				break
+		# if not found image cache
+		else:
+			# first found rack with max image cache space
+			rack, avail_space = HW_free.find_rack_with_maxspace(unavail_rack_list)
+			# evict image until there is enough space for the image
+			while avail_space < image["size"]:
+				avail_space += HW_free.rk_list[rack].remove_image()
+			HW_free.rk_list[rack].insert_image(image)
+			create_success = server_create_in_rack(name, rack, image_name, flavor_type)
+			# add to unavail_rack_list if no resources
+			if create_success == False:
+				unavail_rack_list.append(rack)
+			else:
+				break
+	return create_success
+
+
+	
+	
+	
 
 def server_delete(name):
 	inst = INST.get_instance(name)
@@ -319,18 +381,11 @@ def main():
 					usage_show()
 				for o, a in opts:
 					if o == "--image":
-						image = a
+						image_name = a
 					if o == "--flavor":
 						flavor_type = a
 				inst_name = args[0]
-				machine_list = HW_free.get_machine_list()
-				create_success = False
-				for i in machine_list:
-					# simple first fit algorithm, can be further improved
-					if check_can_host(i, flavor_type) == True:
-						server_create(inst_name, image, i, flavor_type)
-						create_success = True
-						break
+				create_success = server_create(inst_name, image_name, flavor_type)
 				if create_success == False:
 					eprint("No more available resources")
 			elif cmd == "delete":
