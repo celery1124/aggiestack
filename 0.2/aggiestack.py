@@ -36,16 +36,21 @@ class Rack:
 		self.capacity = size
 		self.image_list = []
 	def find_image(self, image):
-		return image in self.image_list
+		for i in self.image_list:
+			if image == i["image-name"]:
+				return True
+		return False
 	def update_image(self, image):
 		self.image_list.remove(image)
 		self.image_list.append(image)
 	def insert_image(self, image):
 		self.image_list.append(image)
-		self.capacity -= image["size"];
+		self.capacity -= image["size"]
+		HW_free.rk_list[self.name]["capacity"] -= image["size"]
 	def remove_image(self):
 		pop_img = self.image_list.pop(0)
 		self.capacity += pop_img["size"]
+		HW_free.rk_list[self.name]["capacity"] += pop_img["size"]
 		return pop_img["size"]
 	def list(self):
 		attr_str = "Rack Name: "+self.name+", Availale space: "+str(self.capacity)
@@ -69,7 +74,7 @@ class Hardware:
 		rk_dict["image-cache"] = Rack(rk_dict["name"], rk_dict["capacity"])
 		self.rk_list[rk_dict["name"]] = rk_dict
 	def insert_sick_rack(self, rack_name):
-		if rack_name in self.sick_rack_list:
+		if rack_name not in self.sick_rack_list:
 			self.sick_rack_list.append(rack_name)
 	def insert_machine(self, hw_inst):
 		hw_dict = OrderedDict()
@@ -251,7 +256,7 @@ def check_can_host(machine, flavor):
 	for i in check_list:
 		if int(f_inst[i]) > int(m_inst[i]):
 			can_host = False
-			break;
+			break
 	return can_host
 
 def server_create_in_rack(name, rack, image_name, flavor_type):
@@ -261,7 +266,7 @@ def server_create_in_rack(name, rack, image_name, flavor_type):
 	for i in machine_list:
 		if check_can_host(i, flavor_type) == True:
 			HW_free.alloc(i, flavor)
-			inst = [name, i, image_name, flavor_type]
+			inst = [name, rack, i, image_name, flavor_type]
 			INST.add(inst)
 			return True
 	return False
@@ -453,8 +458,9 @@ def main():
 					for i in instances_list:
 						if server_migrate(i) == True:
 							migrate_list.append(i)
-							instances_list.remove(i)
 						else:
+							for j in migrate_list:
+								instances_list.remove(j)
 							eprint("Evacuate "+rack_name+"terminated due to resources limitation, please remove some instances")
 							eprint("Successful migrated instances: "+str(migrate_list))
 							eprint("Left instances: "+str(instances_list))
