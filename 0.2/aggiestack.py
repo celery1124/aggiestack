@@ -41,10 +41,10 @@ class Rack:
 		self.image_list.append(image)
 	def insert_image(self, image):
 		self.image_list.append(image)
-		self.size -= image.size;
+		self.capacity -= image.size;
 	def remove_image(self):
 		pop_img = self.image_list.pop(0)
-		self.size += pop_img.size
+		self.capacity += pop_img.size
 	def capacity(self):
 		return self.capacity
 
@@ -52,12 +52,13 @@ class Hardware:
 	def __init__(self):
 		self.hw_list = OrderedDict()
 		self.rk_list = OrderedDict()
-		self.rk_attr_list = ["name", "capacity"]
+		self.rk_attr_list = ["name", "capacity", "image-cache"]
 		self.hw_attr_list = ["name", "rack", "ip", "mem", "num-disk", "num-vcpus"]
 	def insert_rack(self, rk_inst):
 		rk_dict = OrderedDict()
 		rk_dict["name"] = rk_inst[0]
 		rk_dict["capacity"] = rk_inst[1]
+		rk_dict["image-cache"] = Rack(rk_inst[1])
 		self.rk_list[rk_dict["name"]] = rk_dict
 	def insert_machine(self, hw_inst):
 		hw_dict = OrderedDict()
@@ -84,9 +85,11 @@ class Hardware:
 			self.hw_list[machine][i] += flavor[i]
 	def show(self):
 		rk_attr_list = ["rack-name", "storage-capacity(MB)"]
+		rk_show_attr = ["name", "capacity"]
 		t_rk = PrettyTable(rk_attr_list)
 		for k, v in self.rk_list.items():
-			t_rk.add_row(v.values())
+			row = [v[x] for x in rk_show_attr]
+			t_rk.add_row(row)
 		print t_rk
 		t_hw = PrettyTable(self.hw_attr_list)
 		for k, v in self.hw_list.items():
