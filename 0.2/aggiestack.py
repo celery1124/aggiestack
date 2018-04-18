@@ -30,6 +30,24 @@ def show_all():
 	IMG.show()
 	FLV.show()
 
+class Rack:
+	def __init__(self, size):
+		self.capacity = size
+		self.image_list = []
+	def find_image(self, image):
+		return image in self.image_list
+	def update_image(self, image):
+		self.image_list.remove(image)
+		self.image_list.append(image)
+	def insert_image(self, image):
+		self.image_list.append(image)
+		self.size -= image.size;
+	def remove_image(self):
+		pop_img = self.image_list.pop(0)
+		self.size += pop_img.size
+	def capacity(self):
+		return self.capacity
+
 class Hardware:
 	def __init__(self):
 		self.hw_list = OrderedDict()
