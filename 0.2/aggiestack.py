@@ -47,8 +47,6 @@ class Rack:
 		pop_img = self.image_list.pop(0)
 		self.capacity += pop_img["size"]
 		return pop_img["size"]
-	def capacity(self):
-		return self.capacity
 	def list(self):
 		attr_str = "Rack Name: "+self.name+", Availale space: "+str(self.capacity)
 		attr = [attr_str]
@@ -78,6 +76,8 @@ class Hardware:
 		hw_dict["num-disk"] = int(hw_inst[4])
 		hw_dict["num-vcpus"] = int(hw_inst[5])
 		self.hw_list[hw_dict["name"]] = hw_dict
+	def remove_machine(self, machine_name):
+		return self.hw_list.pop(machine_name)
 	def get_machine(self, machine_name):
 		return self.hw_list[machine_name]
 	def get_machine_list(self, rack_name):
@@ -382,11 +382,45 @@ def main():
 					print check_can_host(machine_name, flavor_type)
 				except:
 					usage_show()
-
+			elif cmd == "add":
+				try:
+					opts, args = getopt.getopt(argv[3:], "h", ["mem=", "disk=", "vcpus=", "ip=", "rack="])
+				except getopt.GetoptError as err:
+					eprint(str(err))  # will print something like "option -a not recognized
+				if len(opts) != 5 or args is None:
+					usage_show()
+				for o, a in opts:
+					if o == "--mem":
+						mem = a
+					if o == "--disk":
+						disk = a
+					if o == "--vcpus":
+						vcpus = a
+					if o == "--ip":
+						ip = a
+					if o == "--rack":
+						rack = a
+				hw_inst = [args[0], rack, ip, mem, disk, vcpus]
+				HW.insert_machine(hw_inst)
+				HW_free.insert_machine(hw_inst)			
+			elif cmd == "remove":
+				try:
+					machine_name = argv[3]
+					ret = HW_free.remove_machine(machine_name)
+					if ret == machine_name:
+						# also remove from HW
+						HW.remove_machine(machine_name)
+					else:
+						err = machine_name + " not exist in hardware list!"
+						eprint(err)
+				except:
+					usage_show()
+			elif cmd == "evacuate":
+				print "b"
 		elif issuer == "server":
 			if cmd == "create":
 				try:
-					opts, args = getopt.getopt(argv[3:], "h", ["image=", "flavor=", "instance_name"])
+					opts, args = getopt.getopt(argv[3:], "h", ["image=", "flavor="])
 				except getopt.GetoptError as err:
 					eprint(str(err))  # will print something like "option -a not recognized
 				if len(opts) != 2 or args is None:
