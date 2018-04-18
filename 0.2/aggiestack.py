@@ -5,30 +5,24 @@ from collections import OrderedDict
 def eprint(arg):
 	print >> sys.stderr, arg
 
-def usage_config():
-	print "config command usage"
-	print "command arguments: aggiestack config "
-	print "positional arguments:"
-	print "--hardware\t\tRead the hardware configuration file"
-	print "--images\t\tRead the images configuration file"
-	print "--flavors\t\tRead the flavor instances configuration file"
-
-def usage_show():
-	print "show command usage"
-	print "command arguments: "
-	print "aggiestack show hardware\tList the hardware information"
-	print "aggiestack show images\t\tList the images information"
-	print "aggiestack show flavors\t\tList the flavor information"
-	print "aggiestack show all\t\tList all the information"
-
-def usage():
-	usage_config()
-	usage_show()
-
-def show_all():
-	HW.show()
-	IMG.show()
-	FLV.show()
+def print_usage():
+	print "Aggiestack 0.2 Valid commands:"
+	print "aggiestack config --hardware hdwr-config.txt"
+	print "aggiestack config --images image-config.txt"
+	print "aggiestack config --flavors flavor-config.txt"
+	print "aggiestack show hardware"
+	print "aggiestack show images"
+	print "aggiestack show flavors"
+	print "aggiestack show all"
+	print "aggiestack server create --image IMAGE --flavor FLAVOR_NAME INSTANCE_NAME"
+	print "aggiestack server delete INSTANCE_NAME"
+	print "aggiestack server list"
+	print "aggiestack admin show imagecaches RACK_NAME"
+	print "aggiestack admin show hardware"
+	print "aggiestack admin show instances"
+	print "aggiestack admin evacuate RACK_NAME"
+	print "aggiestack admin add --mem MEM --disk NUM_DISKS --vcpus VCPUs --ip IP --rack RACK_NAME MACHINE"
+	print "aggiestack admin remove MACHINE"
 
 class Rack:
 	def __init__(self, name, size):
@@ -248,6 +242,11 @@ def do_config(option,arg):
 			flv_inst = flv_inst.split()
 			FLV.insert(flv_inst)
 
+def show_all():
+	HW.show()
+	IMG.show()
+	FLV.show()
+
 def check_can_host(machine, flavor):
 	m_inst = HW_free.get_machine(machine)
 	f_inst = FLV.get_flavor(flavor)
@@ -341,13 +340,12 @@ def main():
 		try:
 			program_name = argv[0]
 		except:
-			usage()
-
+			continue
 		# valid test
 		if program_name == "q" or program_name == "quit":
 			exit(0)
 		elif program_name != "aggiestack":
-			usage()
+			print_usage()
 			continue
 		try:
 			issuer = argv[1]
@@ -357,7 +355,7 @@ def main():
 			else:
 				cmd = argv[2]
 		except:
-			usage()
+			print_usage()
 			continue
 
 		if issuer is None:
@@ -366,15 +364,15 @@ def main():
 					opts, args = getopt.getopt(argv[2:], "h", ["hardware=", "images=", "flavors="])
 				except getopt.GetoptError as err:
 					eprint(str(err))  # will print something like "option -a not recognized"
-					usage_config()
-				if len(opts) == 0:
-					usage_config()
+					eprint("use aggiestack --help to see more valid commands")
+					continue
+				if len(opts) != 1:
+					eprint("wrong arguments for config command")
+					eprint("use aggiestack --help to see more valid commands")
+					continue
 				for o, a in opts:
 					if o == "--hardware" or o == "--images" or o == "--flavors":
 						do_config(o,a)
-					else:
-						usage_config()
-
 			elif cmd == "show":
 				try:
 					cmd = argv[2]
@@ -387,9 +385,19 @@ def main():
 					elif cmd == "all":
 						show_all()
 					else:
-						usage_show()
+						eprint("wrong arguments for show command")
+						eprint("valid arguments for show command: hardware/images/flavors/all")
+						eprint("use aggiestack --help to see more valid commands")
+						continue
 				except:
-					usage_show()
+					eprint("not enough arguments for show command")
+					eprint("valid arguments for show command: hardware/images/flavors/all")
+					eprint("use aggiestack --help to see valid commands")
+					continue
+			else:
+				eprint("invalid command")
+				eprint("use aggiestack --help to see valid commands")
+				continue
 		elif issuer == "admin":
 			if cmd == "show":
 				try:
@@ -403,25 +411,35 @@ def main():
 							rack = argv[4]
 							HW_free.show_imagecaches(rack)
 						except:
-							usage_show()
+							eprint("missing rack name, try again")
+							continue
 					else:
-						usage_show()
+						eprint("wrong arguments for admin show command")
+						eprint("valid arguments for admin show command: hardware/instances/imagecaches")
+						eprint("use aggiestack --help to see more valid commands")
+						continue
 				except:
-					usage_show()	
+					eprint("not enough arguments for admin show command")
+					eprint("valid arguments for admin show command: hardware/instances/imagecaches")
+					eprint("use aggiestack --help to see more valid commands")
+					continue	
 			elif cmd == "can_host":
 				try:
 					machine_name = argv[3]
 					flavor_type = argv[4]
 					print check_can_host(machine_name, flavor_type)
 				except:
-					usage_show()
+					eprint("missing arguments for machine name and flavor type, try again")
+					continue
 			elif cmd == "add":
 				try:
 					opts, args = getopt.getopt(argv[3:], "h", ["mem=", "disk=", "vcpus=", "ip=", "rack="])
 				except getopt.GetoptError as err:
 					eprint(str(err))  # will print something like "option -a not recognized
 				if len(opts) != 5 or args is None:
-					usage_show()
+					eprint("wrong arguments for admin add command")
+					eprint("use aggiestack --help to see more valid commands")
+					continue
 				for o, a in opts:
 					if o == "--mem":
 						mem = a
@@ -446,8 +464,10 @@ def main():
 					else:
 						err = machine_name + " not exist in hardware list!"
 						eprint(err)
+						continue
 				except:
-					usage_show()
+					eprint("missing machine name, try again")
+					continue
 			elif cmd == "evacuate":
 				try:
 					rack_name = argv[3]
@@ -466,7 +486,13 @@ def main():
 							eprint("Left instances: "+str(instances_list))
 							break
 				except:
-					usage_show()
+					eprint("missing rack name, try again")
+					continue
+			else:
+				eprint("wrong command arguments for admin command")
+				eprint("valid arguments for server command: show/add/remove/evacuate")
+				eprint("use aggiestack --help to see more valid commands")
+				continue
 		elif issuer == "server":
 			if cmd == "create":
 				try:
@@ -474,7 +500,8 @@ def main():
 				except getopt.GetoptError as err:
 					eprint(str(err))  # will print something like "option -a not recognized
 				if len(opts) != 2 or args is None:
-					usage_show()
+					eprint("wrong arguments for server create command")
+					continue
 				for o, a in opts:
 					if o == "--image":
 						image_name = a
@@ -484,13 +511,24 @@ def main():
 				create_success = server_create(inst_name, image_name, flavor_type)
 				if create_success == False:
 					eprint("No more available resources")
+					continue
 			elif cmd == "delete":
 				inst_name = argv[3]
 				if server_delete(inst_name) == False:
 					err = inst_name + " instance not exist!"
 					eprint(err)
+					continue
 			elif cmd == "list":
 				INST.list()
+			else:
+				eprint("wrong command arguments for server command")
+				eprint("valid arguments for server command: create/delete/list")
+				eprint("use aggiestack --help to see more valid commands")
+				continue
+		else:
+			eprint("invalid command")
+			eprint("use aggiestack --help to see valid commands")
+			continue
 
 
 if __name__ == "__main__":
