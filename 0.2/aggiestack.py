@@ -50,11 +50,11 @@ class Rack:
 	def capacity(self):
 		return self.capacity
 	def list(self):
-		str = "Rack Name: "+self.name+", Availale space: "+str(self.capacity)
-		attr = [str]
+		attr_str = "Rack Name: "+self.name+", Availale space: "+str(self.capacity)
+		attr = [attr_str]
 		t = PrettyTable(attr)
 		for i in self.image_list:
-			t.add_row(i)
+			t.add_row([i["image-name"]])
 		print t
 
 class Hardware:
@@ -67,7 +67,7 @@ class Hardware:
 		rk_dict = OrderedDict()
 		rk_dict["name"] = rk_inst[0]
 		rk_dict["capacity"] = int(rk_inst[1])
-		rk_dict["image-cache"] = Rack(rk_dict["name"]rk_dict["capacity"])
+		rk_dict["image-cache"] = Rack(rk_dict["name"], rk_dict["capacity"])
 		self.rk_list[rk_dict["name"]] = rk_dict
 	def insert_machine(self, hw_inst):
 		hw_dict = OrderedDict()
@@ -82,19 +82,20 @@ class Hardware:
 		return self.hw_list[machine_name]
 	def get_machine_list(self, rack_name):
 		machine_list = []
-		for k, v in self.hw_list:
+		for k, v in self.hw_list.items():
 			if v["rack"] == rack_name:
 				machine_list.append(k)
+		return machine_list
 	def find_rack_with_image(self, image_name):
 		# simple first fit algorithm for finding image in image cache
-		for k, v in self.rk_list:
+		for k, v in self.rk_list.items():
 			if v["image-cache"].find_image(image_name) == True:
 				return k
 		return None
 	def find_rack_with_maxspace(self, exclude_list):
 		max_space = -1
 		rack = None
-		for k, v in self.rk_list:
+		for k, v in self.rk_list.items():
 			if v["image-cache"].capacity > max_space and k not in exclude_list:
 				max_space = v["image-cache"].capacity
 				rack = k
@@ -131,7 +132,7 @@ class Images:
 	def insert(self,img_inst):
 		img_dict = OrderedDict()
 		img_dict["image-name"] = img_inst[0]
-		img_dict["size"] = img_inst[1]
+		img_dict["size"] = int(img_inst[1])
 		img_dict["path"] = img_inst[2]
 		self.img_list[img_dict["image-name"]] = img_dict
 	def get_image(self, image_name):
@@ -241,7 +242,6 @@ def check_can_host(machine, flavor):
 
 def server_create_in_rack(name, rack, image_name, flavor_type):
 	flavor = FLV.get_flavor(flavor_type)
-	image = IMG.get_image(image_name)
 	machine_list = HW_free.get_machine_list(rack)
 	# simple first fit algorithm for allocation
 	for i in machine_list:
@@ -365,7 +365,7 @@ def main():
 						HW_free.show()
 					elif suffix == "instances":
 						INST.show_instance()
-					elif suffix == "imagecaches"
+					elif suffix == "imagecaches":
 						try:
 							rack = argv[4]
 							HW_free.show_imagecaches(rack)
