@@ -68,6 +68,9 @@ class Hardware:
 		rk_dict["capacity"] = int(rk_inst[1])
 		rk_dict["image-cache"] = Rack(rk_dict["name"], rk_dict["capacity"])
 		self.rk_list[rk_dict["name"]] = rk_dict
+	def insert_sick_rack(self, rack_name):
+		if rack_name in self.sick_rack_list:
+			self.sick_rack_list.append(rack_name)
 	def insert_machine(self, hw_inst):
 		hw_dict = OrderedDict()
 		hw_dict["name"] = hw_inst[0]
@@ -167,18 +170,25 @@ class Flavors:
 class Instance:
 	def __init__(self):
 		self.inst_list = OrderedDict()
-		self.inst_attr_list = ["name", "machine", "image", "flavor"]
+		self.inst_attr_list = ["name", "rack", "machine", "image", "flavor"]
 	def add(self, inst):
 		inst_dict = OrderedDict() 
 		inst_dict["name"] = inst[0]
-		inst_dict["machine"] = inst[1]
-		inst_dict["image"] = inst[2]
-		inst_dict["flavor"] = inst[3]
+		inst_dict["rack"] = inst[1]
+		inst_dict["machine"] = inst[2]
+		inst_dict["image"] = inst[3]
+		inst_dict["flavor"] = inst[4]
 		self.inst_list[inst_dict["name"]] = inst_dict
 	def get_instance(self, inst_name):
 		return self.inst_list.get(inst_name)
+	def get_instances_from_rack(self, rack_name):
+		instances_list = []
+		for k, v in self.inst_list.items():
+			if v["rack"] == rack_name:
+				instances_list.append(k)
+		return instances_list
 	def change_name(self, old_name, new_name):
-		self.inst_list[old_name][name] = new_name
+		self.inst_list[old_name]["name"] = new_name
 		self.inst_list[new_name] = self.inst_list.pop(old_name)
 	def remove(self, inst_name):
 		self.inst_list.pop(inst_name, None)
@@ -191,8 +201,8 @@ class Instance:
 			t.add_row(row)
 		print t
 	def show_instances(self):
-		list_attr = ["name", "machine"]
-		print_list_attr = ["instance name", "physical server"]
+		list_attr = ["name", "rack", "machine"]
+		print_list_attr = ["instance name", "rack", "physical server"]
 		t = PrettyTable(print_list_attr)
 		for k, v in self.inst_list.items():
 			row = [v[x] for x in list_attr]
@@ -434,8 +444,23 @@ def main():
 				except:
 					usage_show()
 			elif cmd == "evacuate":
-				migrate_list = []
-
+				try:
+					rack_name = argv[3]
+					HW.insert_sick_rack(rack_name)
+					HW_free.insert_sick_rack(rack_name)
+					instances_list = INST.get_instances_from_rack(rack_name)
+					migrate_list = []
+					for i in instances_list:
+						if server_migrate(i) == True:
+							migrate_list.append(i)
+							instances_list.remove(i)
+						else:
+							eprint("Evacuate "+rack_name+"terminated due to resources limitation, please remove some instances")
+							eprint("Successful migrated instances: "+str(migrate_list))
+							eprint("Left instances: "+str(instances_list))
+							break
+				except:
+					usage_show()
 		elif issuer == "server":
 			if cmd == "create":
 				try:
