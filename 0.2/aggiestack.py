@@ -61,6 +61,7 @@ class Hardware:
 		self.rk_list = OrderedDict()
 		self.rk_attr_list = ["name", "capacity", "image-cache"]
 		self.hw_attr_list = ["name", "rack", "ip", "mem", "num-disk", "num-vcpus"]
+		self.sick_rack_list = []
 	def insert_rack(self, rk_inst):
 		rk_dict = OrderedDict()
 		rk_dict["name"] = rk_inst[0]
@@ -256,7 +257,8 @@ def server_create_in_rack(name, rack, image_name, flavor_type):
 	return False
 
 def server_create(name, image_name, flavor_type):
-	unavail_rack_list = []
+	# copy the sick racks to unavail_rack_list
+	unavail_rack_list = HW_free.sick_rack_list[:]
 	image = IMG.get_image(image_name)
 	create_success = False
 	while len(unavail_rack_list) != len(HW_free.rk_list.keys()):
@@ -432,7 +434,8 @@ def main():
 				except:
 					usage_show()
 			elif cmd == "evacuate":
-				print "b"
+				migrate_list = []
+
 		elif issuer == "server":
 			if cmd == "create":
 				try:
