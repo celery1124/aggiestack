@@ -176,6 +176,9 @@ class Instance:
 		self.inst_list[inst_dict["name"]] = inst_dict
 	def get_instance(self, inst_name):
 		return self.inst_list.get(inst_name)
+	def change_name(self, old_name, new_name):
+		self.inst_list[old_name][name] = new_name
+		self.inst_list[new_name] = self.inst_list.pop(old_name)
 	def remove(self, inst_name):
 		self.inst_list.pop(inst_name, None)
 	def list(self):
@@ -186,7 +189,7 @@ class Instance:
 			row = [v[x] for x in list_attr]
 			t.add_row(row)
 		print t
-	def show_instance(self):
+	def show_instances(self):
 		list_attr = ["name", "machine"]
 		print_list_attr = ["instance name", "physical server"]
 		t = PrettyTable(print_list_attr)
@@ -289,11 +292,24 @@ def server_delete(name):
 	inst = INST.get_instance(name)
 	if inst is None:
 		return False
-	machine = inst["machine"];
+	machine = inst["machine"]
 	flavor = FLV.get_flavor(inst["flavor"])
 	HW_free.release(machine, flavor)
 	INST.remove(name)
 	return True
+
+def server_update_name(old_name, new_name):
+	INST.change_name(old_name, new_name)
+
+def server_migrate(name):
+	inst = INST.get_instance(name)
+	image_name = inst["image"]
+	flavor_type = inst["flavor"]
+	migrate_success = server_create(name+"_temp", image_name, flavor_type)
+	if migrate_success == True:
+		server_delete(name)
+		server_update_name(name+"_temp", name)
+	return migrate_success
 
 HW=Hardware()
 HW_free=Hardware()
@@ -364,7 +380,7 @@ def main():
 					if suffix == "hardware":
 						HW_free.show()
 					elif suffix == "instances":
-						INST.show_instance()
+						INST.show_instances()
 					elif suffix == "imagecaches":
 						try:
 							rack = argv[4]
