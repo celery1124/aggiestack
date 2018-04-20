@@ -60,6 +60,8 @@ class Hardware:
 		self.rk_list = OrderedDict()
 		self.rk_attr_list = ["name", "capacity", "image-cache"]
 		self.hw_attr_list = ["name", "rack", "ip", "mem", "num-disk", "num-vcpus"]
+		# temp list for migrate instaces in evacuate command
+		self.sick_rack_list = []
 	def rack_exist(self, rack_name):
 		if rack_name in self.rk_list:
 			return True
@@ -77,6 +79,13 @@ class Hardware:
 		for k, v in self.hw_list.items():
 			if v["rack"] == rack_name:
 				self.hw_list.pop(k)
+	def insert_to_sick_rack(self, rack_name):
+		self.sick_rack_list.append(rack_name)
+	def remove_from_sick_rack(self, rack_name):
+		self.sick_rack_list.remove(rack_name)
+	def get_sick_rack(self):
+		ret = self.sick_rack_list[:]
+		return ret
 	def insert_machine(self, hw_inst):
 		hw_dict = OrderedDict()
 		hw_dict["name"] = hw_inst[0]
@@ -300,10 +309,10 @@ def server_create_in_rack(name, rack, image_name, flavor_type):
 
 def server_create(name, image_name, flavor_type):
 	# copy the sick racks to unavail_rack_list
-	unavail_rack_list = []
+	unavail_rack_list = HW_free.get_sick_rack()
 	# legitimate check
 	inst = INST.get_instance(name)
-	if inst is None:
+	if inst is not None:
 		eprint("Instance "+name+" already exist!")
 		eprint("Please specify another instance name")
 		return False
@@ -523,6 +532,8 @@ def main():
 					if HW_free.rack_exist(rack_name) == False:
 						eprint("Rack" + rack_name + "not exist!")
 						continue
+					HW_free.insert_to_sick_rack(rack_name)
+					HW.insert_to_sick_rack(rack_name)
 					instances_list = INST.get_instances_from_rack(rack_name)
 					migrate_list = []
 					evacuate_success = True
@@ -538,6 +549,8 @@ def main():
 							eprint("Please delete some instances or add more machines and evacuate again")
 							evacuate_success = False
 							break
+					HW_free.remove_from_sick_rack(rack_name)
+					HW.remove_from_sick_rack(rack_name)
 					if evacuate_success == True:
 						HW.clear_rack(rack_name)
 						HW_free.clear_rack(rack_name)
