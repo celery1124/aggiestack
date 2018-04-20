@@ -61,6 +61,11 @@ class Hardware:
 		self.rk_attr_list = ["name", "capacity", "image-cache"]
 		self.hw_attr_list = ["name", "rack", "ip", "mem", "num-disk", "num-vcpus"]
 		self.sick_rack_list = []
+	def rack_exist(self, rack_name):
+		if rack_name in self.rk_list:
+			return True
+		else:
+			return False
 	def insert_rack(self, rk_inst):
 		rk_dict = OrderedDict()
 		rk_dict["name"] = rk_inst[0]
@@ -70,6 +75,15 @@ class Hardware:
 	def insert_sick_rack(self, rack_name):
 		if rack_name not in self.sick_rack_list:
 			self.sick_rack_list.append(rack_name)
+			return True
+		else:
+			return False
+	def remove_sick_rack(self, rack_name):
+		if rack_name in self.sick_rack_list:
+			self.sick_rack_list.remove(rack_name)
+			return True
+		else:
+			return False
 	def insert_machine(self, hw_inst):
 		hw_dict = OrderedDict()
 		hw_dict["name"] = hw_inst[0]
@@ -126,7 +140,10 @@ class Hardware:
 			t_hw.add_row(v.values())
 		print t_hw
 	def show_imagecaches(self, rack_name):
-		self.rk_list[rack_name]["image-cache"].list()
+		if rack_name in self.rk_list:
+			self.rk_list[rack_name]["image-cache"].list()
+		else:
+			eprint("Rack "+ rack_name + " not exist!")
 
 class Images:
 	def __init__(self):
@@ -139,7 +156,10 @@ class Images:
 		img_dict["path"] = img_inst[2]
 		self.img_list[img_dict["image-name"]] = img_dict
 	def get_image(self, image_name):
-		return self.img_list[image_name]
+		if image_name in self.img_list:
+			return self.img_list[image_name]
+		else:
+			return None
 	def show(self):
 		show_attr_list = ["image-name", "size(MB)", "path"]
 		t = PrettyTable(show_attr_list)
@@ -159,7 +179,10 @@ class Flavors:
 		flv_dict["num-vcpus"] = int(flv_inst[3])
 		self.flv_list[flv_dict["type"]] = flv_dict
 	def get_flavor(self, flavor_name):
-		return self.flv_list[flavor_name]
+		if flavor_name in self.flv_list:
+			return self.flv_list[flavor_name]
+		else:
+			return None
 	def show(self):
 		t = PrettyTable(self.flv_attr_list)
 		for k, v in self.flv_list.items():
@@ -179,7 +202,10 @@ class Instance:
 		inst_dict["flavor"] = inst[4]
 		self.inst_list[inst_dict["name"]] = inst_dict
 	def get_instance(self, inst_name):
-		return self.inst_list.get(inst_name)
+		if inst_name in self.inst_list:
+			return self.inst_list.get(inst_name)
+		else:
+			return None
 	def get_instances_from_rack(self, rack_name):
 		instances_list = []
 		for k, v in self.inst_list.items():
@@ -273,7 +299,20 @@ def server_create_in_rack(name, rack, image_name, flavor_type):
 def server_create(name, image_name, flavor_type):
 	# copy the sick racks to unavail_rack_list
 	unavail_rack_list = HW_free.sick_rack_list[:]
+	# legitimate check
+	inst = INST.get_instance(name)
+	if inst is None:
+		eprint("Instance "+name+" already exist!")
+		eprint("Please specify another instance name")
+		return False
 	image = IMG.get_image(image_name)
+	if image is None:
+		eprint("Image "+image_name+" not found!")
+		return False
+	flavor = FLV.get_flavor(flavor_type)
+	if flavor is None:
+		eprint("Flavor "+flavor_type+" not found!")
+		return False
 	create_success = False
 	while len(unavail_rack_list) != len(HW_free.rk_list.keys()):
 		# first check rack server cache, see if contains image
@@ -301,6 +340,8 @@ def server_create(name, image_name, flavor_type):
 				unavail_rack_list.append(rack)
 			else:
 				break
+	if create_success == False:
+		eprint("No more available resources")
 	return create_success
 
 
@@ -471,8 +512,14 @@ def main():
 			elif cmd == "evacuate":
 				try:
 					rack_name = argv[3]
+					# legitimate check
+					if HW_free.rack_exist(rack_name) == False:
+						eprint("Rack" + rack_name + "not exist!")
+						continue
+					if HW_free.insert_sick_rack(rack_name) == False:
+						eprint("Rack"+rack_name+"already evacuated")
+						continue
 					HW.insert_sick_rack(rack_name)
-					HW_free.insert_sick_rack(rack_name)
 					instances_list = INST.get_instances_from_rack(rack_name)
 					migrate_list = []
 					for i in instances_list:
@@ -484,6 +531,10 @@ def main():
 							eprint("Evacuate "+rack_name+"terminated due to resources limitation, please remove some instances")
 							eprint("Successful migrated instances: "+str(migrate_list))
 							eprint("Left instances: "+str(instances_list))
+							eprint("Please delete some instances or add more machines and evacuate again")
+							# remove rack from sick list
+							HW.remove_sick_rack(rack_name)
+							HW_free.remove_sick_rack(rack_name)
 							break
 				except:
 					eprint("missing rack name, try again")
@@ -508,14 +559,11 @@ def main():
 					if o == "--flavor":
 						flavor_type = a
 				inst_name = args[0]
-				create_success = server_create(inst_name, image_name, flavor_type)
-				if create_success == False:
-					eprint("No more available resources")
-					continue
+				server_create(inst_name, image_name, flavor_type)
 			elif cmd == "delete":
 				inst_name = argv[3]
 				if server_delete(inst_name) == False:
-					err = inst_name + " instance not exist!"
+					err = "instance " + inst_name + " not exist!"
 					eprint(err)
 					continue
 			elif cmd == "list":
