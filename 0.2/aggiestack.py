@@ -71,10 +71,9 @@ class Hardware:
 		rk_dict["capacity"] = int(rk_inst[1])
 		rk_dict["image-cache"] = Rack(rk_dict["name"], rk_dict["capacity"])
 		self.rk_list[rk_dict["name"]] = rk_dict
-	# delete rack also the machines in the rack
-	def delete_rack(self, rack_name):
+	# delete all the machines in the rack
+	def clear_rack(self, rack_name):
 		# rack_name guarantee exist
-		self.rk_list.pop(rack_name)
 		for k, v in self.hw_list.items():
 			if v["rack"] == rack_name:
 				self.hw_list.pop(k)
@@ -486,6 +485,10 @@ def main():
 						ip = a
 					if o == "--rack":
 						rack = a
+				# legitimate check rack must exist in rack list
+				if HW_free.rack_exist(rack) == False:
+					eprint("Rack" + rack + "not exist!")
+					continue
 				hw_inst = [args[0], rack, ip, mem, disk, vcpus]
 				HW.insert_machine(hw_inst)
 				HW_free.insert_machine(hw_inst)			
@@ -526,8 +529,8 @@ def main():
 							evacuate_success = False
 							break
 					if evacuate_success == True:
-						HW.delete_rack(rack_name)
-						HW_free.delete_rack(rack_name)
+						HW.clear_rack(rack_name)
+						HW_free.clear_rack(rack_name)
 				except:
 					eprint("missing rack name, try again")
 					continue
