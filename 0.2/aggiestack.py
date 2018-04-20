@@ -60,7 +60,6 @@ class Hardware:
 		self.rk_list = OrderedDict()
 		self.rk_attr_list = ["name", "capacity", "image-cache"]
 		self.hw_attr_list = ["name", "rack", "ip", "mem", "num-disk", "num-vcpus"]
-		self.sick_rack_list = []
 	def rack_exist(self, rack_name):
 		if rack_name in self.rk_list:
 			return True
@@ -72,18 +71,13 @@ class Hardware:
 		rk_dict["capacity"] = int(rk_inst[1])
 		rk_dict["image-cache"] = Rack(rk_dict["name"], rk_dict["capacity"])
 		self.rk_list[rk_dict["name"]] = rk_dict
-	def insert_sick_rack(self, rack_name):
-		if rack_name not in self.sick_rack_list:
-			self.sick_rack_list.append(rack_name)
-			return True
-		else:
-			return False
-	def remove_sick_rack(self, rack_name):
-		if rack_name in self.sick_rack_list:
-			self.sick_rack_list.remove(rack_name)
-			return True
-		else:
-			return False
+	# delete rack also the machines in the rack
+	def delete_rack(self, rack_name):
+		# rack_name guarantee exist
+		self.rk_list.pop(rack_name)
+		for k, v in self.hw_list.items():
+			if v["rack"] == rack_name:
+				self.hw_list.pop(k)
 	def insert_machine(self, hw_inst):
 		hw_dict = OrderedDict()
 		hw_dict["name"] = hw_inst[0]
@@ -298,7 +292,7 @@ def server_create_in_rack(name, rack, image_name, flavor_type):
 
 def server_create(name, image_name, flavor_type):
 	# copy the sick racks to unavail_rack_list
-	unavail_rack_list = HW_free.sick_rack_list[:]
+	unavail_rack_list = []
 	# legitimate check
 	inst = INST.get_instance(name)
 	if inst is None:
@@ -516,12 +510,9 @@ def main():
 					if HW_free.rack_exist(rack_name) == False:
 						eprint("Rack" + rack_name + "not exist!")
 						continue
-					if HW_free.insert_sick_rack(rack_name) == False:
-						eprint("Rack"+rack_name+"already evacuated")
-						continue
-					HW.insert_sick_rack(rack_name)
 					instances_list = INST.get_instances_from_rack(rack_name)
 					migrate_list = []
+					evacuate_success = True
 					for i in instances_list:
 						if server_migrate(i) == True:
 							migrate_list.append(i)
@@ -532,10 +523,11 @@ def main():
 							eprint("Successful migrated instances: "+str(migrate_list))
 							eprint("Left instances: "+str(instances_list))
 							eprint("Please delete some instances or add more machines and evacuate again")
-							# remove rack from sick list
-							HW.remove_sick_rack(rack_name)
-							HW_free.remove_sick_rack(rack_name)
+							evacuate_success = False
 							break
+					if evacuate_success == True:
+						HW.delete_rack(rack_name)
+						HW_free.delete_rack(rack_name)
 				except:
 					eprint("missing rack name, try again")
 					continue
