@@ -604,11 +604,17 @@ def do_log(file, command, success):
 	file.flush()
 
 def main():
-	log_file = open(" aggiestack-log.txt", "a")
-	while True:
-		argv = raw_input('> ')
-		success = process_command(argv)
-		do_log(log_file, argv, success)
+	log_file = open("aggiestack-log.txt", "a+")
+	if len(sys.argv) > 1:
+		script_file = open(sys.argv[1], "r")
+		for line in script_file:
+			success = process_command(line.rstrip())
+			do_log(log_file, line.rstrip(), success) 
+	else:
+		while True:
+			argv = raw_input('> ')
+			success = process_command(argv)
+			do_log(log_file, argv, success)
 
 
 
