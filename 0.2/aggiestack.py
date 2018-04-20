@@ -89,7 +89,10 @@ class Hardware:
 	def remove_machine(self, machine_name):
 		return self.hw_list.pop(machine_name)
 	def get_machine(self, machine_name):
-		return self.hw_list[machine_name]
+		if machine_name in self.hw_list:
+			return self.hw_list[machine_name]
+		else:
+			return None
 	def get_machine_list(self, rack_name):
 		machine_list = []
 		for k, v in self.hw_list.items():
@@ -203,6 +206,12 @@ class Instance:
 		instances_list = []
 		for k, v in self.inst_list.items():
 			if v["rack"] == rack_name:
+				instances_list.append(k)
+		return instances_list
+	def get_instances_from_machine(self, machine_name):
+		instances_list = []
+		for k, v in self.inst_list.items():
+			if v["machine"] == machine_name:
 				instances_list.append(k)
 		return instances_list
 	def change_name(self, old_name, new_name):
@@ -495,14 +504,15 @@ def main():
 			elif cmd == "remove":
 				try:
 					machine_name = argv[3]
-					ret = HW_free.remove_machine(machine_name)
-					if ret == machine_name:
-						# also remove from HW
-						HW.remove_machine(machine_name)
-					else:
-						err = machine_name + " not exist in hardware list!"
-						eprint(err)
+					# legitimate check
+					if HW_free.get_machine(machine_name) is None:
+						eprint("Machine " + machine_name + " not exist in hardware list!")
 						continue
+					instance_list = INST.get_instances_from_machine(machine_name)
+					for i in instance_list:
+						server_delete(i)
+					HW_free.remove_machine(machine_name)
+					HW.remove_machine(machine_name)
 				except:
 					eprint("missing machine name, try again")
 					continue
