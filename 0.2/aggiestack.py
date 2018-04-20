@@ -386,7 +386,6 @@ FLV=Flavors()
 INST=Instance()
 
 def process_command(argv):
-	success = True
 	argv = argv.split()
 	try:
 		program_name = argv[0]
@@ -594,12 +593,13 @@ def process_command(argv):
 		eprint("invalid command")
 		eprint("use aggiestack --help to see valid commands")
 		return False
+	return True
 
 def do_log(file, command, success):
 	if success == True:
-		file.write("SUCCESS\t")
+		file.write("[SUCCESS]\t")
 	else:
-		file.write("FAILURE\t")
+		file.write("[FAILURE]\t")
 	file.write(command+"\n")
 	file.flush()
 
