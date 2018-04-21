@@ -26,7 +26,7 @@ The whole project took me around a 6 full days to finish. The time took for the 
 5. Refining the error handling for each command and adding logging and process script frile and misc and writing the report. This took me around 1 day to finish.  
 
 ## Github tree and Timestamp
-Github tree for the [Project1](https://github.tamu.edu/celery1124/689-18-a/tree/master/P1). The last commit before submitting is **commit 924954ff39b9f8a3d2298f851ab84b43a7b085b3**  
+Github tree for the [Project1](https://github.tamu.edu/celery1124/689-18-a/tree/master/P1). The last commit before submitting is **commit 974ff5b527d15aab1e5fd405056d6153c1590700**  
 The Github tree contains two folder, 0.1 is the unfinished code for P0 and P1 partA without full error handling and logging and process from srcipt file feature. 0.2 is the final version of the code with all the functionality and requirements.  
 
 ## Design and Implementation
@@ -69,5 +69,3 @@ python aggiestack.py
 ```shell
 python aggiestack.py stript_filename
 ```
-
-## Debug and testing
