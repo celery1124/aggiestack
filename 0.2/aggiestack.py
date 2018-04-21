@@ -62,6 +62,10 @@ class Hardware:
 		self.hw_attr_list = ["name", "rack", "ip", "mem", "num-disk", "num-vcpus"]
 		# temp list for migrate instaces in evacuate command
 		self.sick_rack_list = []
+	def reset(self):
+		self.hw_list = OrderedDict()
+		self.rk_list = OrderedDict()
+		self.sick_rack_list = []
 	def rack_exist(self, rack_name):
 		if rack_name in self.rk_list:
 			return True
@@ -154,6 +158,8 @@ class Images:
 	def __init__(self):
 		self.img_list = OrderedDict()
 		self.img_attr_list = ["image-name", "size", "path"]
+	def reset(self):
+		self.img_list = OrderedDict()
 	def insert(self,img_inst):
 		img_dict = OrderedDict()
 		img_dict["image-name"] = img_inst[0]
@@ -176,6 +182,8 @@ class Flavors:
 	def __init__(self):
 		self.flv_list = OrderedDict()
 		self.flv_attr_list = ["type", "mem", "num-disk", "num-vcpus"]
+	def reset(self):
+		self.flv_list = OrderedDict()		
 	def insert(self,flv_inst):
 		flv_dict = OrderedDict() 
 		flv_dict["type"] = flv_inst[0]
@@ -198,6 +206,8 @@ class Instance:
 	def __init__(self):
 		self.inst_list = OrderedDict()
 		self.inst_attr_list = ["name", "rack", "machine", "image", "flavor"]
+	def reset(self):
+		self.inst_list = OrderedDict()
 	def add(self, inst):
 		inst_dict = OrderedDict() 
 		inst_dict["name"] = inst[0]
@@ -252,6 +262,10 @@ def do_config(option,arg):
 		eprint("No such file: "+arg)
 		exit(0)
 	if option == "--hardware":
+		# reset HW as well INSTANCE
+		HW.reset()
+		HW_free.reset()
+		INST.reset()
 		# read the rack information
 		num_of_line = f.readline()
 		for i in xrange(int(num_of_line)):
@@ -267,12 +281,16 @@ def do_config(option,arg):
 			HW.insert_machine(hw_inst)
 			HW_free.insert_machine(hw_inst)
 	elif option == "--images":
+		# reset IMG
+		IMG.reset()
 		num_of_line = f.readline()
 		for i in xrange(int(num_of_line)):
 			img_inst = f.readline()
 			img_inst = img_inst.split()
 			IMG.insert(img_inst)
 	elif option == "--flavors":
+		# reset FLV
+		FLV.reset()
 		num_of_line = f.readline()
 		for i in xrange(int(num_of_line)):
 			flv_inst = f.readline()
@@ -615,8 +633,6 @@ def main():
 			argv = raw_input('> ')
 			success = process_command(argv)
 			do_log(log_file, argv, success)
-
-
 
 if __name__ == "__main__":
     main()
