@@ -112,10 +112,10 @@ class Hardware:
 			if v["rack"] == rack_name:
 				machine_list.append(k)
 		return machine_list
-	def find_rack_with_image(self, image_name):
+	def find_rack_with_image(self, image_name, exclude_list):
 		# simple first fit algorithm for finding image in image cache
 		for k, v in self.rk_list.items():
-			if v["image-cache"].find_image(image_name) == True:
+			if v["image-cache"].find_image(image_name) == True and k not in exclude_list:
 				return k
 		return None
 	def find_rack_with_maxspace(self, exclude_list):
@@ -345,7 +345,7 @@ def server_create(name, image_name, flavor_type):
 	create_success = False
 	while len(unavail_rack_list) != len(HW_free.rk_list.keys()):
 		# first check rack server cache, see if contains image
-		rack = HW_free.find_rack_with_image(image_name)
+		rack = HW_free.find_rack_with_image(image_name, unavail_rack_list)
 		# if found rack contain image allocate on that rack
 		if rack is not None and rack not in unavail_rack_list:
 			HW_free.rk_list[rack]["image-cache"].update_image(image)
