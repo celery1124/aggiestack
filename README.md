@@ -19,6 +19,7 @@ python aggiestack.py
 ### Running with script file
 ```shell
 python aggiestack.py stript_filename
+```
 
 
-Detailed implementation notes please reference the [report](./report.md)
+Detailed implementation notes please reference the [report](./report.md)  
